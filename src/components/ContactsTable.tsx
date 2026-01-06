@@ -384,16 +384,24 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
               >
                 {contact.link ? (
                   <div className="flex items-center gap-2 w-full">
-                    <a
-                      href={contact.link.startsWith("http") ? contact.link : `https://${contact.link}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline truncate flex-1"
-                      onClick={(e) => e.stopPropagation()}
+                    <span
+                      className="text-primary hover:underline truncate flex-1 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const url = contact.link?.startsWith("http") ? contact.link : `https://${contact.link}`;
+                        window.open(url, "_blank", "noopener,noreferrer");
+                      }}
                     >
                       {contact.link}
-                    </a>
-                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    </span>
+                    <ExternalLink 
+                      className="w-3.5 h-3.5 text-muted-foreground shrink-0 cursor-pointer hover:text-primary" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const url = contact.link?.startsWith("http") ? contact.link : `https://${contact.link}`;
+                        window.open(url, "_blank", "noopener,noreferrer");
+                      }}
+                    />
                     <span
                       className="cursor-text text-muted-foreground hover:text-foreground"
                       onClick={() => startEditing(contact.id, "link", contact.link)}
