@@ -202,7 +202,7 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
   }
 
   return (
-    <div className="w-full overflow-x-auto">
+    <div className="w-full overflow-x-auto border border-border rounded-lg">
       {/* Header */}
       <div className="flex border-b border-border text-sm text-muted-foreground">
         <div
