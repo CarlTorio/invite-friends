@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,6 +10,24 @@ import {
 } from "@/components/ui/select";
 import { Plus, FileText, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+
+interface ColumnWidths {
+  business_name: number;
+  email: number;
+  mobile: number;
+  status: number;
+  notes: number;
+}
+
+const DEFAULT_WIDTHS: ColumnWidths = {
+  business_name: 200,
+  email: 180,
+  mobile: 140,
+  status: 120,
+  notes: 250,
+};
+
+const MIN_WIDTH = 80;
 
 interface Contact {
   id: string;
@@ -35,6 +53,37 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
   const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null);
   const [newRowId, setNewRowId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [columnWidths, setColumnWidths] = useState<ColumnWidths>(DEFAULT_WIDTHS);
+  const startWidthRef = useRef<number>(0);
+
+  const handleResizeStart = useCallback(
+    (key: keyof ColumnWidths) => (e: React.MouseEvent) => {
+      e.preventDefault();
+      startWidthRef.current = columnWidths[key];
+      const startX = e.clientX;
+
+      const handleMouseMove = (moveEvent: MouseEvent) => {
+        const delta = moveEvent.clientX - startX;
+        setColumnWidths((prev) => ({
+          ...prev,
+          [key]: Math.max(MIN_WIDTH, startWidthRef.current + delta),
+        }));
+      };
+
+      const handleMouseUp = () => {
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      };
+
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+    },
+    [columnWidths]
+  );
 
   useEffect(() => {
     fetchContacts();
@@ -108,10 +157,10 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
   const handleBlur = (id: string, field: string, value: string) => {
     handleUpdate(id, field, value);
     setEditingCell(null);
-    
+
     // Clean up empty new rows
     if (newRowId === id && !value.trim() && field === "business_name") {
-      const contact = contacts.find(c => c.id === id);
+      const contact = contacts.find((c) => c.id === id);
       if (contact && !contact.business_name && !contact.email && !contact.mobile_number) {
         handleDelete(id);
       }
@@ -135,6 +184,15 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
     Busy: "text-red-400",
   };
 
+  const ResizeHandle = ({ columnKey }: { columnKey: keyof ColumnWidths }) => (
+    <div
+      className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary active:bg-primary transition-colors z-10"
+      onMouseDown={handleResizeStart(columnKey)}
+    >
+      <div className="absolute right-[-1px] top-0 bottom-0 w-[3px] opacity-0 hover:opacity-100 bg-primary/50" />
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="text-center text-muted-foreground py-12">
@@ -144,23 +202,43 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full overflow-x-auto">
       {/* Header */}
       <div className="flex border-b border-border text-sm text-muted-foreground">
-        <div className="flex-1 min-w-[200px] px-3 py-2 border-r border-border font-medium">
+        <div
+          className="relative px-3 py-2 border-r border-border font-medium shrink-0"
+          style={{ width: columnWidths.business_name }}
+        >
           Business Name
+          <ResizeHandle columnKey="business_name" />
         </div>
-        <div className="flex-1 min-w-[180px] px-3 py-2 border-r border-border font-medium">
+        <div
+          className="relative px-3 py-2 border-r border-border font-medium shrink-0"
+          style={{ width: columnWidths.email }}
+        >
           Email
+          <ResizeHandle columnKey="email" />
         </div>
-        <div className="flex-1 min-w-[140px] px-3 py-2 border-r border-border font-medium">
+        <div
+          className="relative px-3 py-2 border-r border-border font-medium shrink-0"
+          style={{ width: columnWidths.mobile }}
+        >
           Mobile
+          <ResizeHandle columnKey="mobile" />
         </div>
-        <div className="w-[120px] px-3 py-2 border-r border-border font-medium">
+        <div
+          className="relative px-3 py-2 border-r border-border font-medium shrink-0"
+          style={{ width: columnWidths.status }}
+        >
           Status
+          <ResizeHandle columnKey="status" />
         </div>
-        <div className="flex-1 min-w-[200px] px-3 py-2 font-medium">
+        <div
+          className="relative px-3 py-2 font-medium flex-1 min-w-[150px]"
+          style={{ minWidth: columnWidths.notes }}
+        >
           Notes
+          <ResizeHandle columnKey="notes" />
         </div>
       </div>
 
@@ -171,7 +249,10 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
           className="flex border-b border-border hover:bg-muted/30 group"
         >
           {/* Business Name */}
-          <div className="flex-1 min-w-[200px] border-r border-border">
+          <div
+            className="border-r border-border shrink-0"
+            style={{ width: columnWidths.business_name }}
+          >
             <div className="flex items-center gap-2 px-2 py-1.5">
               <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
               {editingCell?.id === contact.id && editingCell?.field === "business_name" ? (
@@ -184,7 +265,7 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
                 />
               ) : (
                 <span
-                  className="cursor-text flex-1 min-h-[24px] flex items-center hover:bg-muted/50 rounded px-1 text-sm"
+                  className="cursor-text flex-1 min-h-[24px] flex items-center hover:bg-muted/50 rounded px-1 text-sm truncate"
                   onClick={() => setEditingCell({ id: contact.id, field: "business_name" })}
                 >
                   {contact.business_name || <span className="text-muted-foreground/50 text-sm">Empty</span>}
@@ -194,7 +275,10 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
           </div>
 
           {/* Email */}
-          <div className="flex-1 min-w-[180px] border-r border-border">
+          <div
+            className="border-r border-border shrink-0"
+            style={{ width: columnWidths.email }}
+          >
             {editingCell?.id === contact.id && editingCell?.field === "email" ? (
               <Input
                 ref={inputRef}
@@ -205,7 +289,7 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
               />
             ) : (
               <div
-                className="cursor-text px-3 py-1 min-h-[32px] flex items-center hover:bg-muted/50 text-sm"
+                className="cursor-text px-3 py-1 min-h-[32px] flex items-center hover:bg-muted/50 text-sm truncate"
                 onClick={() => setEditingCell({ id: contact.id, field: "email" })}
               >
                 {contact.email || <span className="text-muted-foreground/50 text-sm">Empty</span>}
@@ -214,7 +298,10 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
           </div>
 
           {/* Mobile */}
-          <div className="flex-1 min-w-[140px] border-r border-border">
+          <div
+            className="border-r border-border shrink-0"
+            style={{ width: columnWidths.mobile }}
+          >
             {editingCell?.id === contact.id && editingCell?.field === "mobile_number" ? (
               <Input
                 ref={inputRef}
@@ -225,7 +312,7 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
               />
             ) : (
               <div
-                className="cursor-text px-3 py-1 min-h-[32px] flex items-center hover:bg-muted/50 text-sm"
+                className="cursor-text px-3 py-1 min-h-[32px] flex items-center hover:bg-muted/50 text-sm truncate"
                 onClick={() => setEditingCell({ id: contact.id, field: "mobile_number" })}
               >
                 {contact.mobile_number || <span className="text-muted-foreground/50 text-sm">Empty</span>}
@@ -234,7 +321,10 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
           </div>
 
           {/* Status */}
-          <div className="w-[120px] border-r border-border">
+          <div
+            className="border-r border-border shrink-0"
+            style={{ width: columnWidths.status }}
+          >
             <Select
               value={contact.status}
               onValueChange={(value) => handleUpdate(contact.id, "status", value)}
@@ -255,7 +345,10 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
           </div>
 
           {/* Notes */}
-          <div className="flex-1 min-w-[200px] flex items-center">
+          <div
+            className="flex items-center flex-1"
+            style={{ minWidth: columnWidths.notes }}
+          >
             {editingCell?.id === contact.id && editingCell?.field === "notes" ? (
               <Input
                 ref={inputRef}
@@ -266,7 +359,7 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
               />
             ) : (
               <div
-                className="cursor-text px-3 py-1 min-h-[32px] flex items-center flex-1 hover:bg-muted/50 text-sm"
+                className="cursor-text px-3 py-1 min-h-[32px] flex items-center flex-1 hover:bg-muted/50 text-sm truncate"
                 onClick={() => setEditingCell({ id: contact.id, field: "notes" })}
               >
                 {contact.notes || <span className="text-muted-foreground/50 text-sm">Empty</span>}
@@ -274,7 +367,7 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
             )}
             <button
               onClick={() => handleDelete(contact.id)}
-              className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-destructive/10 rounded transition-opacity"
+              className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-destructive/10 rounded transition-opacity shrink-0"
             >
               <Trash2 className="w-3.5 h-3.5 text-destructive" />
             </button>
