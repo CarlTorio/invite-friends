@@ -48,6 +48,7 @@ export type Database = {
           priority_level: string | null
           status: string
           updated_at: string
+          value: number | null
         }
         Insert: {
           business_name: string
@@ -64,6 +65,7 @@ export type Database = {
           priority_level?: string | null
           status?: string
           updated_at?: string
+          value?: number | null
         }
         Update: {
           business_name?: string
@@ -80,6 +82,7 @@ export type Database = {
           priority_level?: string | null
           status?: string
           updated_at?: string
+          value?: number | null
         }
         Relationships: [
           {

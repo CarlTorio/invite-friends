@@ -21,12 +21,13 @@ interface EmailTemplate {
   body: string;
 }
 
-type ColumnKey = "business_name" | "link" | "email" | "mobile" | "status" | "priority" | "follow_up" | "last_contacted" | "notes";
+type ColumnKey = "business_name" | "link" | "email" | "mobile" | "value" | "status" | "priority" | "follow_up" | "last_contacted" | "notes";
 
 interface ColumnWidths {
   business_name: number;
   email: number;
   mobile: number;
+  value: number;
   status: number;
   priority: number;
   follow_up: number;
@@ -39,6 +40,7 @@ const DEFAULT_WIDTHS: ColumnWidths = {
   business_name: 200,
   email: 180,
   mobile: 140,
+  value: 120,
   status: 120,
   priority: 100,
   follow_up: 160,
@@ -52,6 +54,7 @@ const COLUMN_LABELS: Record<ColumnKey, string> = {
   link: "Link",
   email: "Email",
   mobile: "Mobile",
+  value: "Value",
   status: "Status",
   priority: "Priority",
   follow_up: "Follow Up",
@@ -64,6 +67,7 @@ const DEFAULT_COLUMN_ORDER: ColumnKey[] = [
   "link",
   "email",
   "mobile",
+  "value",
   "status",
   "priority",
   "follow_up",
@@ -79,6 +83,7 @@ interface Contact {
   business_name: string;
   email: string | null;
   mobile_number: string | null;
+  value: number | null;
   status: string;
   link?: string | null;
   notes: string | null;
@@ -241,7 +246,16 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
   };
 
   const handleUpdate = async (id: string, field: string, value: string) => {
-    const updateValue = field === "status" ? value : (value.trim() || null);
+    let updateValue: string | number | null;
+    if (field === "status") {
+      updateValue = value;
+    } else if (field === "value") {
+      const numValue = parseFloat(value.replace(/[^\d.]/g, ""));
+      updateValue = isNaN(numValue) ? null : numValue;
+    } else {
+      updateValue = value.trim() || null;
+    }
+    
     const { error } = await supabase
       .from("contacts")
       .update({ [field]: updateValue, updated_at: new Date().toISOString() })
@@ -595,6 +609,34 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
           </div>
         );
 
+      case "value":
+        return (
+          <div className={baseClass} style={style}>
+            {editingCell?.id === contact.id && editingCell?.field === "value" ? (
+              <Input
+                ref={inputRef}
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onBlur={() => handleBlur(contact.id, "value")}
+                onKeyDown={(e) => handleKeyDown(e, contact.id, "value")}
+                className="h-full px-3 py-1 border-0 bg-transparent focus-visible:ring-1 focus-visible:ring-primary rounded-none text-sm"
+                placeholder="0"
+              />
+            ) : (
+              <div
+                className="cursor-text px-3 py-1 min-h-[32px] flex items-center text-sm w-full hover:bg-muted/50"
+                onClick={() => startEditing(contact.id, "value", contact.value?.toString() || "")}
+              >
+                {contact.value != null ? (
+                  <span className="font-medium">₱{contact.value.toLocaleString()}</span>
+                ) : (
+                  <span className="text-muted-foreground/50">₱0</span>
+                )}
+              </div>
+            )}
+          </div>
+        );
+
       case "status":
         return (
           <div className={baseClass} style={style}>
@@ -846,6 +888,19 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
                   <SelectItem value="Completed" className="text-sm">Completed</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+        );
+
+      case "value":
+        return (
+          <div className={baseClass} style={style}>
+            <div className="px-3 py-1 min-h-[32px] flex items-center text-sm">
+              {contact.value != null ? (
+                <span className="font-medium">₱{contact.value.toLocaleString()}</span>
+              ) : (
+                <span className="text-muted-foreground/50">₱0</span>
+              )}
             </div>
           </div>
         );
