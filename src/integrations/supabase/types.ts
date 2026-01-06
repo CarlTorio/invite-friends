@@ -14,42 +14,7 @@ export type Database = {
   }
   public: {
     Tables: {
-      user_emails: {
-        Row: {
-          created_at: string
-          credits: number
-          email: string
-          id: string
-          last_copied_at: string | null
-          max_monthly_credits: number
-          monthly_credits: number
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          credits?: number
-          email: string
-          id?: string
-          last_copied_at?: string | null
-          max_monthly_credits?: number
-          monthly_credits?: number
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          credits?: number
-          email?: string
-          id?: string
-          last_copied_at?: string | null
-          max_monthly_credits?: number
-          monthly_credits?: number
-          status?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
