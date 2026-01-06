@@ -223,6 +223,13 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
         </div>
         <div
           className="relative px-3 py-2 border-r border-border font-medium shrink-0"
+          style={{ width: columnWidths.link }}
+        >
+          Link
+          <ResizeHandle columnKey="link" />
+        </div>
+        <div
+          className="relative px-3 py-2 border-r border-border font-medium shrink-0"
           style={{ width: columnWidths.email }}
         >
           Email
@@ -241,13 +248,6 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
         >
           Status
           <ResizeHandle columnKey="status" />
-        </div>
-        <div
-          className="relative px-3 py-2 border-r border-border font-medium shrink-0"
-          style={{ width: columnWidths.link }}
-        >
-          Link
-          <ResizeHandle columnKey="link" />
         </div>
         <div
           className="relative px-3 py-2 font-medium flex-1 min-w-[150px]"
@@ -289,6 +289,64 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
                 </span>
               )}
             </div>
+          </div>
+
+          {/* Link */}
+          <div
+            className="border-r border-border shrink-0"
+            style={{ width: columnWidths.link }}
+          >
+            {editingCell?.id === contact.id && editingCell?.field === "link" ? (
+              <Input
+                ref={inputRef}
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onBlur={() => handleBlur(contact.id, "link")}
+                onKeyDown={(e) => handleKeyDown(e, contact.id, "link")}
+                className="h-full px-3 py-1 border-0 bg-transparent focus-visible:ring-1 focus-visible:ring-primary rounded-none text-sm"
+                placeholder="https://..."
+              />
+            ) : (
+              <div
+                className="px-3 py-1 min-h-[32px] flex items-center text-sm"
+              >
+                {contact.link ? (
+                  <div className="flex items-center gap-2 w-full">
+                    <span
+                      className="text-primary hover:underline truncate flex-1 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const url = contact.link?.startsWith("http") ? contact.link : `https://${contact.link}`;
+                        window.open(url, "_blank", "noopener,noreferrer");
+                      }}
+                    >
+                      {contact.link}
+                    </span>
+                    <ExternalLink 
+                      className="w-3.5 h-3.5 text-muted-foreground shrink-0 cursor-pointer hover:text-primary" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const url = contact.link?.startsWith("http") ? contact.link : `https://${contact.link}`;
+                        window.open(url, "_blank", "noopener,noreferrer");
+                      }}
+                    />
+                    <span
+                      className="cursor-text text-muted-foreground hover:text-foreground"
+                      onClick={() => startEditing(contact.id, "link", contact.link)}
+                    >
+                      ✎
+                    </span>
+                  </div>
+                ) : (
+                  <span
+                    className="cursor-text flex-1 hover:bg-muted/50 rounded px-1 text-muted-foreground/50"
+                    onClick={() => startEditing(contact.id, "link", contact.link)}
+                  >
+                    Empty
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Email */}
@@ -361,64 +419,6 @@ const ContactsTable = ({ categoryId }: ContactsTableProps) => {
                 <SelectItem value="Busy" className="text-sm">Busy</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          {/* Link */}
-          <div
-            className="border-r border-border shrink-0"
-            style={{ width: columnWidths.link }}
-          >
-            {editingCell?.id === contact.id && editingCell?.field === "link" ? (
-              <Input
-                ref={inputRef}
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onBlur={() => handleBlur(contact.id, "link")}
-                onKeyDown={(e) => handleKeyDown(e, contact.id, "link")}
-                className="h-full px-3 py-1 border-0 bg-transparent focus-visible:ring-1 focus-visible:ring-primary rounded-none text-sm"
-                placeholder="https://..."
-              />
-            ) : (
-              <div
-                className="px-3 py-1 min-h-[32px] flex items-center text-sm"
-              >
-                {contact.link ? (
-                  <div className="flex items-center gap-2 w-full">
-                    <span
-                      className="text-primary hover:underline truncate flex-1 cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const url = contact.link?.startsWith("http") ? contact.link : `https://${contact.link}`;
-                        window.open(url, "_blank", "noopener,noreferrer");
-                      }}
-                    >
-                      {contact.link}
-                    </span>
-                    <ExternalLink 
-                      className="w-3.5 h-3.5 text-muted-foreground shrink-0 cursor-pointer hover:text-primary" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const url = contact.link?.startsWith("http") ? contact.link : `https://${contact.link}`;
-                        window.open(url, "_blank", "noopener,noreferrer");
-                      }}
-                    />
-                    <span
-                      className="cursor-text text-muted-foreground hover:text-foreground"
-                      onClick={() => startEditing(contact.id, "link", contact.link)}
-                    >
-                      ✎
-                    </span>
-                  </div>
-                ) : (
-                  <span
-                    className="cursor-text flex-1 hover:bg-muted/50 rounded px-1 text-muted-foreground/50"
-                    onClick={() => startEditing(contact.id, "link", contact.link)}
-                  >
-                    Empty
-                  </span>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Notes */}
