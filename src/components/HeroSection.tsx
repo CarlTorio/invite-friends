@@ -20,9 +20,7 @@ const HeroSection = () => {
           animationDelay: "0.1s"
         }}>
              Data & Account  
-            <span className="block text-gradient bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
-              Credit Hub
-            </span>
+            <span className="block text-gradient bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">Management Hub</span>
           </h1>
 
           {/* Subtitle */}
