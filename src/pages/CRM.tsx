@@ -101,10 +101,10 @@ const CRM = () => {
             <Link to="/" className="text-muted-foreground hover:text-foreground text-sm mb-2 inline-block">
               ← Back to Home
             </Link>
-            <h1 className="text-3xl font-bold text-foreground">
+            <h1 className="text-3xl font-bold text-foreground text-center">
               Contact Management
             </h1>
-            <p className="text-muted-foreground mt-2">
+            <p className="text-muted-foreground mt-2 text-center">
               Select a category or create a new one to manage your contacts
             </p>
           </div>
